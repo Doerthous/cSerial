@@ -29,7 +29,7 @@ typedef struct serial
 {
 #ifdef _SRL_WIN32_
     HANDLE fd;
-#elif _SRL_CYGWIN32_
+#elif defined(_SRL_CYGWIN32_)
     int fd;
 #endif
     

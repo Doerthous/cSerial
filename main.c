@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 #include "serial.h"
 
 int main(int argc, char const *argv[])
