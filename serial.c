@@ -1,10 +1,10 @@
-/**
+﻿/**
   ******************************************************************************
-  * \brief      
+  * \brief
   * \file       serial.c
   * \author     doerthous
   * \date       2019-09-12
-  * \details    
+  * \details
   ******************************************************************************
   */
 
@@ -34,7 +34,7 @@ static int serial_other_config(serial_t sr, DCB *options)
 }
 
 static int serial_set_baud_rate(serial_t sr, DCB *options, int baud)
-{ 
+{
     switch(baud) {
         case 4800:
             options->BaudRate = CBR_4800;
@@ -50,7 +50,7 @@ static int serial_set_baud_rate(serial_t sr, DCB *options, int baud)
             break;
         case 115200:
             options->BaudRate = CBR_115200;
-            break;            
+            break;
         default:
             fprintf(stderr,"Unkown baud rate!\n");
             return 0;
@@ -104,7 +104,7 @@ static int serial_set_parity_check(serial_t sr, DCB *options, char parity)
 }
 
 static int serial_set_stop_bit(serial_t sr, DCB *options, int stop_bit)
-{   
+{
     switch(stop_bit) {
         case 1:
             options->StopBits = ONESTOPBIT;
@@ -149,7 +149,7 @@ static int serial_set_rts_dtr(serial_t sr, int rts_dtr, int val)
     return 0;
 }
 
-static int serial_config(serial_t sr, va_list args)
+static int _serial_set(serial_t sr, va_list args)
 {
     int p;
     DCB options;
@@ -195,7 +195,6 @@ static int serial_config(serial_t sr, va_list args)
     return 1;
 }
 
-
 serial_t serial_open(const char *name, ...)
 {
     serial_t sr = NULL;
@@ -221,7 +220,7 @@ serial_t serial_open(const char *name, ...)
         }
         else {
             va_start(args, name);
-            ret = serial_config(sr, args);
+            ret = _serial_set(sr, args);
             va_end(args);
 
             if (!ret) {
@@ -297,7 +296,7 @@ uint32_t serial_read(serial_t sr, uint8_t *buff, uint32_t size)
 
 
 // --------------------------- SRL CYGWIN32 ------------------------------------
-#elif defined(_SRL_CYGWIN32_)
+#elif defined(_SRL_CYGWIN32_) || defined(_SRL_LINUX_)
 
 
 #include <unistd.h>
@@ -327,7 +326,7 @@ static int serial_other_config(int fd, struct termios *options)
      */
 
     // If data is available, read(2) returns immediately, with the lesser of the
-    // number of bytes available, or the number of bytes requested.  If no data 
+    // number of bytes available, or the number of bytes requested.  If no data
     // is available, read(2) returns 0.
     options->c_cc[VTIME] = 0;
     options->c_cc[VMIN] = 0;
@@ -360,7 +359,7 @@ static int serial_set_baud_rate(int fd, struct termios *options, int baud)
         case 115200:
             cfsetispeed(options, B115200);
             cfsetospeed(options, B115200);
-            break;            
+            break;
         default:
             fprintf(stderr,"Unkown baud rate!\n");
             return 0;
@@ -423,7 +422,7 @@ static int serial_set_parity_check(int fd, struct termios *options, char parity)
 }
 
 static int serial_set_stop_bit(int fd, struct termios *options, int stop_bit)
-{   
+{
     switch(stop_bit) {
         case 1:
             options->c_cflag &= ~CSTOPB;
@@ -472,7 +471,7 @@ static int serial_set_rts_dtr(int fd, int rts_dtr, int val)
     }
 }
 
-static int serial_config(serial_t sr, va_list args)
+static int _serial_set(serial_t sr, va_list args)
 {
     int p;
     struct termios options;
@@ -543,7 +542,7 @@ serial_t serial_open(const char *name, ...)
         }
         else {
             va_start(args, name);
-            ret = serial_config(sr, args);
+            ret = _serial_set(sr, args);
             va_end(args);
 
             if (!ret) {
@@ -614,7 +613,7 @@ uint32_t serial_read(serial_t serial, uint8_t *buff, uint32_t size)
                 usleep(1000);
             }
             else if (errno == EINTR) {
-                // todo to where?
+                // TODO to where?
                 break;
             }
             continue;
@@ -630,5 +629,41 @@ uint32_t serial_read(serial_t serial, uint8_t *buff, uint32_t size)
 }
 
 #endif
+
+
+void serial_flush(serial_t sr, int option)
+{
+    assert(option == SRL_FLUSH_I 
+        || option == SRL_FLUSH_O 
+        || option == SRL_FLUSH_IO);
+    
+#if defined(_SRL_WIN32_)
+    if (option == SRL_FLUSH_IO) {
+        PurgeComm(sr->fd, PURGE_TXCLEAR|PURGE_RXCLEAR);
+        return;
+    }
+    if (option == SRL_FLUSH_I) {
+        PurgeComm(sr->fd, PURGE_RXCLEAR);
+        return;
+    }
+    if (option == SRL_FLUSH_O) {
+        PurgeComm(sr->fd, PURGE_TXCLEAR);
+        return;
+    }
+#elif defined(_SRL_CYGWIN32_) || defined(_SRL_LINUX_)
+    if (option == SRL_FLUSH_IO) {
+        tcflush(sr->fd, TCIOFLUSH);
+        return;
+    }
+    if (option == SRL_FLUSH_I) {
+        tcflush(sr->fd, TCIFLUSH);
+        return;
+    }
+    if (option == SRL_FLUSH_O) {
+        tcflush(sr->fd, TCOFLUSH);
+        return;
+    }
+#endif
+}
 
 /****************************** Copy right 2019 *******************************/
