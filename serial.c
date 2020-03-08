@@ -592,37 +592,29 @@ uint32_t serial_read(serial_t serial, uint8_t *buff, uint32_t size)
 {
     ssize_t rc = 0;
     uint32_t trc = 0;
-    struct timeval start;
-    struct timeval now;
-    int time_passed;
 
+    fd_set fds; 
+	int ret = -1;
+	while (size > 0) {
+        FD_ZERO(&fds);
+        FD_SET(serial->fd, &fds);
+        struct timeval timeout = {
+            serial->rx_timeout/1000, serial->rx_timeout%1000*1000
+        };
 
-    gettimeofday(&start, NULL);
-    while(size > 0) {
-        if (serial->rx_timeout > 0) {
-            gettimeofday(&now, NULL);
-            time_passed = (now.tv_sec - start.tv_sec)*1000;
-            time_passed += (now.tv_sec - start.tv_sec)/1000;
-            if (time_passed > serial->rx_timeout) {
-                break;
-            }
+        ret = select(serial->fd+1, &fds, NULL, NULL, &timeout);
+        if (ret == -1) {
+            return 0;
         }
-
-        if((rc = read(serial->fd, buff, 1)) <= 0) {
-            if (rc == 0 || (rc == -1 && errno == EAGAIN)) {
-                usleep(1000);
-            }
-            else if (errno == EINTR) {
-                // TODO to where?
-                break;
-            }
-            continue;
+        if (ret == 0) {
+            return trc;
         }
-
-        size -= rc;
-        buff += rc;
-        trc += rc;
-        gettimeofday(&start, NULL);
+        if(FD_ISSET(serial->fd, &fds)) {
+            rc = read(serial->fd, buff, size);
+            size -= rc;
+            buff += rc;
+            trc += rc;
+        }
     }
 
     return trc;
