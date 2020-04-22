@@ -40,6 +40,14 @@ elseif(UNIX)
     )
 endif()
 
+link_directories(build)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${PROJECT_SOURCE_DIR}/build/bin)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${PROJECT_SOURCE_DIR}/build/bin)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/build/bin)
+add_executable(libmain 
+    main.c
+)
+target_link_libraries(libmain ${libcserial})
 
 if(UNIX)
     install(DIRECTORY lib/ DESTINATION lib)

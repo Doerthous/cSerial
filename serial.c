@@ -159,7 +159,7 @@ static int serial_set_flow_control(serial_t sr, DCB *options, char fctrl)
             //
             //break;
         default:
-            fprintf(stderr,"Not support.\n");
+            fprintf(stderr,"%s, Not support.\n", __func__);
             return 0;
     }
 
@@ -168,7 +168,7 @@ static int serial_set_flow_control(serial_t sr, DCB *options, char fctrl)
 
 static int serial_set_rts_dtr(serial_t sr, int rts_dtr, int val)
 {
-    fprintf(stderr, "Not support.\n");
+    fprintf(stderr, "%s, Not support.\n", __func__);
     return 0;
 }
 

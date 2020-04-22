@@ -5,8 +5,10 @@ BIN_OUTPUT=build/bin
 
 ifeq ("$(uname -s)","Linux")
 	LIB=so
+	LINK_LIB=cserial
 else
 	LIB=lib
+	LINK_LIB=libcserial.lib
 endif
 
 prefix=/usr
@@ -20,6 +22,10 @@ main:
 lib:
 	mkdir -p $(LIB_OUTPUT)
 	gcc serial.c -fPIC -shared -o $(LIB_OUTPUT)/libcserial.$(LIB)
+
+libmain: lib
+	mkdir -p $(BIN_OUTPUT)
+	gcc main.c -L$(LIB_OUTPUT) -Wl,-rpath=$(LIB_OUTPUT) -llibcserial -o $(BIN_OUTPUT)/libmain.exe
 
 # make install prefix=/install_dir
 install: lib
