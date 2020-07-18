@@ -51,5 +51,5 @@ target_link_libraries(libmain ${libcserial})
 
 if(UNIX)
     install(DIRECTORY lib/ DESTINATION lib)
-    install(DIRECTORY include/ DESTINATION include/de/io)
+    install(DIRECTORY include/ DESTINATION include)
 endif()

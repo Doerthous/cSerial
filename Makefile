@@ -29,7 +29,7 @@ libmain: lib
 
 # make install prefix=/install_dir
 install: lib
-	install -D  serial.h $(prefix)/include/de/io/serial.h
+	install -D  serial.h $(prefix)/include/serial.h
 	install -D $(LIB_OUTPUT)/libcserial.$(LIB) $(prefix)/lib/libcserial.$(LIB)
 
 clean:
