@@ -347,6 +347,8 @@ static int serial_other_config(int fd, struct termios *options)
      *ECHOE：在接收EPASE时执行Backspace,Space,Backspace组合
      *ISIG：允许信号
      */
+    options->c_iflag &= ~(BRKINT | ICRNL | INPCK | ISTRIP | IXON);
+
 
     // If data is available, read(2) returns immediately, with the lesser of the
     // number of bytes available, or the number of bytes requested.  If no data
@@ -617,8 +619,8 @@ uint32_t serial_read(serial_t serial, uint8_t *buff, uint32_t size)
     uint32_t trc = 0;
 
     fd_set fds; 
-	int ret = -1;
-	while (size > 0) {
+    int ret = -1;
+    while (size > 0) {
         FD_ZERO(&fds);
         FD_SET(serial->fd, &fds);
         struct timeval timeout = {
