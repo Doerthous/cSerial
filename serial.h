@@ -34,27 +34,32 @@
 #ifndef SERIAL_H_
 #define SERIAL_H_
 
-#include <stdint.h>
-
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) || defined(__WIN32__)
-# define _SRL_WIN32_
-# include <windows.h>
-#elif defined(__CYGWIN32__) || defined(__CYGWIN__)
-# define _SRL_CYGWIN32_
-#elif defined(__linux)
-# define _SRL_LINUX_
-# define HANDLE int
-#else
-# error "Not support platform!"
+#if defined(_MSC_VER)
+# if defined(SERIAL_API_EXPORT)
+#  define SERIAL_API __declspec(dllexport)
+# elif defined(SERIAL_API_IMPORT)
+#  define SERIAL_API __declspec(dllimport)
+# endif
+#endif
+#ifndef SERIAL_API
+# define SERIAL_API
 #endif
 
+#ifdef  __cplusplus
+# define SERIAL_BEGIN_DECLS  extern "C" {
+# define SERIAL_END_DECLS    }
+#else
+# define SERIAL_BEGIN_DECLS
+# define SERIAL_END_DECLS
+#endif
 
+#include <stdint.h>
+#include <stddef.h>
 
-typedef struct serial
-{
-    HANDLE fd;
-    int rx_timeout;
-} * serial_t;
+SERIAL_BEGIN_DECLS
+
+struct serial;
+typedef struct serial * serial_t;
 
 enum serial_param
 {
@@ -69,18 +74,26 @@ enum serial_param
     SRL_NULL = 0,
 };
 
+SERIAL_API 
 serial_t serial_open(const char *name, ...);
-void serial_close(serial_t serial);
-uint32_t serial_write(serial_t serial, const uint8_t *data, uint32_t size);
-uint32_t serial_read(serial_t serial, uint8_t *buff, uint32_t size);
 
+SERIAL_API 
+void serial_close(serial_t serial);
+
+SERIAL_API 
+size_t serial_write(serial_t serial, const uint8_t *data, size_t size);
+
+SERIAL_API 
+size_t serial_read(serial_t serial, uint8_t *buff, size_t size);
 
 enum
 {
-    SRL_FLUSH_I,
-    SRL_FLUSH_O,
-    SRL_FLUSH_IO
+    SRL_FLUSH_I = (1UL << 0),
+    SRL_FLUSH_O = (1UL << 1),
 };
-void serial_flush(serial_t serial, int option);
+SERIAL_API 
+void serial_flush(serial_t serial, int dir);
+
+SERIAL_END_DECLS
 
 #endif /* SERIAL_H_ */

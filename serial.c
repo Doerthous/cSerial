@@ -33,6 +33,25 @@
 
 #include "serial.h"
 
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) || defined(__WIN32__)
+# define _SRL_WIN32_
+# include <windows.h>
+#elif defined(__CYGWIN32__) || defined(__CYGWIN__)
+# define _SRL_CYGWIN32_
+# define HANDLE int
+#elif defined(__linux)
+# define _SRL_LINUX_
+# define HANDLE int
+#else
+# error "Not support platform!"
+#endif
+
+typedef struct serial
+{
+    HANDLE fd;
+    int rx_timeout;
+} * serial_t;
+
 #include <stdlib.h>
 #include <assert.h>
 #include <stdio.h>
@@ -266,9 +285,9 @@ void serial_close(serial_t serial)
     }
 }
 
-uint32_t serial_write(serial_t sr, const uint8_t *data, uint32_t size)
+size_t serial_write(serial_t sr, const uint8_t *data, size_t size)
 {
-    uint32_t twc = 0;
+    size_t twc = 0;
     DWORD wc;
 
     while(size > 0) {
@@ -285,10 +304,10 @@ uint32_t serial_write(serial_t sr, const uint8_t *data, uint32_t size)
     return twc;
 }
 
-uint32_t serial_read(serial_t sr, uint8_t *buff, uint32_t size)
+size_t serial_read(serial_t sr, uint8_t *buff, size_t size)
 {
     DWORD rc = 0;
-    uint32_t trc = 0;
+    size_t trc = 0;
 
 
     COMMTIMEOUTS timeouts;
@@ -588,10 +607,10 @@ void serial_close(serial_t serial)
     }
 }
 
-uint32_t serial_write(serial_t serial, const uint8_t *data, uint32_t size)
+size_t serial_write(serial_t serial, const uint8_t *data, size_t size)
 {
     ssize_t wc = 0;
-    uint32_t twc = 0;
+    size_t twc = 0;
 
 
     while(size > 0) {
@@ -613,10 +632,10 @@ uint32_t serial_write(serial_t serial, const uint8_t *data, uint32_t size)
     return twc;
 }
 
-uint32_t serial_read(serial_t serial, uint8_t *buff, uint32_t size)
+size_t serial_read(serial_t serial, uint8_t *buff, size_t size)
 {
     ssize_t rc = 0;
-    uint32_t trc = 0;
+    size_t trc = 0;
 
     fd_set fds; 
     int ret = -1;
@@ -652,10 +671,10 @@ void serial_flush(serial_t sr, int option)
 {
     assert(option == SRL_FLUSH_I 
         || option == SRL_FLUSH_O 
-        || option == SRL_FLUSH_IO);
+        || option == (SRL_FLUSH_I|SRL_FLUSH_O));
     
 #if defined(_SRL_WIN32_)
-    if (option == SRL_FLUSH_IO) {
+    if (option == (SRL_FLUSH_I|SRL_FLUSH_O)) {
         PurgeComm(sr->fd, PURGE_TXCLEAR|PURGE_RXCLEAR);
         return;
     }
@@ -668,7 +687,7 @@ void serial_flush(serial_t sr, int option)
         return;
     }
 #elif defined(_SRL_CYGWIN32_) || defined(_SRL_LINUX_)
-    if (option == SRL_FLUSH_IO) {
+    if (option == (SRL_FLUSH_I|SRL_FLUSH_O)) {
         tcflush(sr->fd, TCIOFLUSH);
         return;
     }
