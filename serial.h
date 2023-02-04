@@ -76,6 +76,7 @@ enum serial_param
 
 SERIAL_API 
 serial_t serial_open(const char *name, ...);
+#define serial_open(...) serial_open(__VA_ARGS__, SRL_NULL)
 
 SERIAL_API 
 void serial_close(serial_t serial);

@@ -33,6 +33,8 @@
 
 #include "serial.h"
 
+#undef serial_open
+
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32) || defined(__WIN32__)
 # define _SRL_WIN32_
 # include <windows.h>
